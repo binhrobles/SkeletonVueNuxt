@@ -2,9 +2,8 @@
 parameters:
 - name: environment
   type: string
-
-variables:
-  artifactName: '$(environment)-$(Build.SourceVersion)' # append the git hash to the artifact name
+- name: artifactName
+  type: string
 
 jobs:
   - job: Artifact

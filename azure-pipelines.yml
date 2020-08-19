@@ -54,11 +54,11 @@ stages:
   # Depend on success of previous stage execution
   # Could be templated out
 - stage: PublishDev
-  variables:
-    artifactName: 'Development-$(Build.SourceVersion)' # append the git hash to the artifact name
-    environment: development
   jobs:
     - template: build-and-deploy.template.yml
+      parameters:
+        environment: development
+        artifactName: 'development-$(Build.SourceVersion)' # append the git hash to the artifact name
 
     - job: PostDeploy
       dependsOn:
@@ -68,11 +68,11 @@ stages:
         displayName: 'Some great regression tests'
 
 - stage: PublishQA
-  variables:
-    artifactName: 'QA-$(Build.SourceVersion)' # append the git hash to the artifact name
-    environment: qa
   jobs:
     - template: build-and-deploy.template.yml
+      parameters:
+        environment: qa
+        artifactName: 'qa-$(Build.SourceVersion)' # append the git hash to the artifact name
 
     - job: PostDeploy
       dependsOn:

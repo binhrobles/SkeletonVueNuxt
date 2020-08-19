@@ -55,7 +55,7 @@ stages:
 
       - script: |
           env | grep
-          yarn install --production
+          yarn install
           yarn build
         displayName: 'install and build'
         env:

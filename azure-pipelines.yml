@@ -52,7 +52,6 @@ stages:
 
   # Pipeline publish stages
   # Depend on success of previous stage execution
-  # Could be templated out
 - stage: PublishDev
   jobs:
     - template: build-and-deploy.template.yml
@@ -67,7 +66,9 @@ stages:
       - script: echo "TODO"
         displayName: 'Some great regression tests'
 
+  # only runs when run was triggered by git push
 - stage: PublishQA
+  condition: or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'BatchedCI'))
   jobs:
     - template: build-and-deploy.template.yml
       parameters:

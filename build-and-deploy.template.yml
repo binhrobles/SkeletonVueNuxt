@@ -48,7 +48,7 @@ jobs:
         cwd: 'infra/'
         stack: 'binhrobles/vue-nuxt-infra/${{ parameters.environment }}'
 
-      # runs `pulumi up --yes` if part of automated process
+      # runs `pulumi up --yes` if triggered by Git push
     - task: Pulumi@1
       condition: or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'BatchedCI'))
       inputs:
@@ -64,7 +64,9 @@ jobs:
       name: 'pulumi'
 
     # copies static files to s3 bucket after successful building and infra generation
+    # only when triggered by Git push
   - job: Deploy
+    condition: or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'BatchedCI'))
     dependsOn:
       - Artifact
       - Infrastructure

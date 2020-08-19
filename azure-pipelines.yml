@@ -68,6 +68,12 @@ stages:
           testRunner: JUnit
           testResultsFiles: junit.xml
 
+      - task: PublishPipelineArtifact@1
+        condition: failed()
+        inputs:
+          targetPath: 'test/ui/__image_snapshots__/__diff_output__'
+          artifactName: UITestSnapshotDiff
+
     - job: PulumiValidation
       steps:
       - script: echo "TODO"

@@ -27,9 +27,10 @@ stages:
           path: $(YARN_CACHE_FOLDER)
         displayName: Cache Yarn packages
 
-      - script: |
-          yarn install
-          yarn test
+      - script: yarn install
+        displayName: 'Install dependencies'
+
+      - script: yarn test
         displayName: 'Client Unit Tests'
 
       - task: PublishTestResults@2
@@ -66,11 +67,12 @@ stages:
         displayName: Cache Yarn packages
 
       - script: yarn install
+        displayName: 'Install dependencies'
 
       - script: |
           env | grep NODE_ENV
           yarn build
-        displayName: 'build'
+        displayName: 'Generate static resources'
         env:
           NODE_ENV: $(environment)
 
@@ -113,7 +115,7 @@ stages:
         name: 'pulumi'
 
       # copies static files to s3 bucket after successful building and infra generation
-    - job: PublishApp
+    - job: Deploy
       dependsOn:
         - Artifact
         - Infrastructure
@@ -136,3 +138,11 @@ stages:
         env:  # explicitly map in secret env vars
           AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID)
           AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)
+
+      # can run any integration or smoke testing here
+    - job: PostDeploy
+      dependsOn:
+        - Deploy
+      steps:
+      - script: echo "TODO"
+        displayName: 'Some great integration tests'

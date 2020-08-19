@@ -35,6 +35,12 @@ stages:
           testRunner: JUnit
           testResultsFiles: junit.xml
 
+      - task: PublishCodeCoverageResults@1
+        condition: succeededOrFailed()
+        inputs:
+          codeCoverageTool: Cobertura
+          summaryFileLocation: $(System.DefaultWorkingDirectory)/coverage/cobertura-coverage.xml
+
     - job: PulumiValidation
       steps:
       - script: echo "TODO"

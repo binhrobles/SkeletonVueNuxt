@@ -6,7 +6,7 @@ pool:
 
 variables:
   # provides pulumi access token + aws creds to runner env
-  # - group: cloud-secrets
+  - group: cloud-secrets
   - name: YARN_CACHE_FOLDER
     value: $(Pipeline.Workspace)/.yarn
   # set for react-scripts test runner

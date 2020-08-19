@@ -19,7 +19,7 @@ stages:
   # Can run multiple validations (unit test, acceptance, linting) in parallel
 - stage: Validation
   jobs:
-    - job: ClientTests
+    - job: ClientUnitTests
       steps:
       - task: Cache@2
         inputs:
@@ -30,13 +30,7 @@ stages:
       - script: yarn install
         displayName: 'Install dependencies'
 
-      - script: yarn build
-        displayName: 'Build test environment'
-
       - script: yarn test:unit
-        displayName: 'Client Unit Tests'
-
-      - script: yarn test:ui
         displayName: 'Client UI Tests'
 
       - task: PublishTestResults@2
@@ -51,6 +45,29 @@ stages:
           codeCoverageTool: Cobertura
           summaryFileLocation: $(System.DefaultWorkingDirectory)/coverage/cobertura-coverage.xml
 
+    - job: ClientUITests
+      steps:
+      - task: Cache@2
+        inputs:
+          key: 'client | yarn | "$(Agent.OS)" | yarn.lock'
+          path: $(YARN_CACHE_FOLDER)
+        displayName: Cache Yarn packages
+
+      - script: yarn install
+        displayName: 'Install dependencies'
+
+      - script: yarn build
+        displayName: 'Build test environment'
+
+      - script: yarn test:ui
+        displayName: 'Client UI Tests'
+
+      - task: PublishTestResults@2
+        condition: succeededOrFailed()
+        inputs:
+          testRunner: JUnit
+          testResultsFiles: junit.xml
+
     - job: PulumiValidation
       steps:
       - script: echo "TODO"
@@ -60,7 +77,7 @@ stages:
   # Depend on success of previous stage execution
 - stage: PublishDev
   jobs:
-    - template: build-and-deploy.template.yml
+    - template: pipeline-templates/build-and-deploy.template.yml
       parameters:
         environment: development
         artifactName: 'development-$(Build.SourceVersion)' # append the git hash to the artifact name
@@ -76,7 +93,7 @@ stages:
 - stage: PublishQA
   condition: or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'BatchedCI'))
   jobs:
-    - template: build-and-deploy.template.yml
+    - template: pipeline-templates/build-and-deploy.template.yml
       parameters:
         environment: qa
         artifactName: 'qa-$(Build.SourceVersion)' # append the git hash to the artifact name

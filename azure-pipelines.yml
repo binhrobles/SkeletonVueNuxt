@@ -19,7 +19,7 @@ stages:
   # Can run multiple validations (unit test, acceptance, linting) in parallel
 - stage: Validation
   jobs:
-    - job: ClientUnitTests
+    - job: ClientTests
       steps:
       - task: Cache@2
         inputs:
@@ -30,8 +30,14 @@ stages:
       - script: yarn install
         displayName: 'Install dependencies'
 
-      - script: yarn test
+      - script: yarn build
+        displayName: 'Build test environment'
+
+      - script: yarn test:unit
         displayName: 'Client Unit Tests'
+
+      - script: yarn test:ui
+        displayName: 'Client UI Tests'
 
       - task: PublishTestResults@2
         condition: succeededOrFailed()

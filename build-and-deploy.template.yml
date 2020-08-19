@@ -1,3 +1,4 @@
+# reusable template for artifacting and deploying a Vue Nuxt app
 ---
 parameters:
 - name: environment
@@ -22,10 +23,10 @@ jobs:
         yarn build
       displayName: 'Generate static resources'
       env:
-        NODE_ENV: $(environment)
+        NODE_ENV: ${{ parameters.environment }}
 
     - publish: dist
-      artifact: $(artifactName)
+      artifact: ${{ parameters.artifactName }}
 
   - job: Infrastructure
     steps:
@@ -45,7 +46,7 @@ jobs:
       inputs:
         command: 'preview'
         cwd: 'infra/'
-        stack: 'binhrobles/vue-nuxt-infra/$(environment)'
+        stack: 'binhrobles/vue-nuxt-infra/${{ parameters.environment }}'
 
       # runs `pulumi up --yes` if part of automated process
     - task: Pulumi@1
@@ -53,7 +54,7 @@ jobs:
       inputs:
         command: 'up'
         cwd: 'infra/'
-        stack: 'binhrobles/vue-nuxt-infra/$(environment)'
+        stack: 'binhrobles/vue-nuxt-infra/${{ parameters.environment }}'
         args: '--yes'
 
     - script: |
@@ -75,14 +76,14 @@ jobs:
 
     steps:
     - download: current # specifies that artifact was published during this run
-      artifact: $(artifactName)
+      artifact: ${{ parameters.artifactName }}
 
     - task: AmazonWebServices.aws-vsts-tools.S3Upload.S3Upload@1
-      displayName: 'S3 Upload: $(artifactName) to $(bucketName)'
+      displayName: 'S3 Upload: ${{ parameters.artifactName }} to $(bucketName)'
       inputs:
         regionName: 'us-west-2'
         bucketName: $(bucketName)
-        sourceFolder: '$(Pipeline.Workspace)/$(artifactName)'
+        sourceFolder: '$(Pipeline.Workspace)/${{ parameters.artifactName }}'
       env:  # explicitly map in secret env vars
         AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID)
         AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)

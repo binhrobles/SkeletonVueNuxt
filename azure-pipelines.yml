@@ -14,6 +14,9 @@ variables:
     value: true
 
 stages:
+  # Validation stage
+  # Always runs first
+  # Can run multiple validations (unit test, acceptance, linting) in parallel
 - stage: Validation
   jobs:
     - job: ClientUnitTests
@@ -46,6 +49,9 @@ stages:
       - script: echo "TODO"
         displayName: 'Validate Pulumi code'
 
+  # Pipeline publish stages
+  # Depend on success of previous stage execution
+  # Could be templated out
 - stage: PublishDev
   variables:
     artifactName: 'Development-$(Build.SourceVersion)' # append the git hash to the artifact name
@@ -59,11 +65,12 @@ stages:
           path: $(YARN_CACHE_FOLDER)
         displayName: Cache Yarn packages
 
+      - script: yarn install
+
       - script: |
-          env | grep
-          yarn install
+          env | grep NODE_ENV
           yarn build
-        displayName: 'install and build'
+        displayName: 'build'
         env:
           NODE_ENV: $(environment)
 
@@ -82,6 +89,7 @@ stages:
         workingDirectory: 'infra/'
         displayName: 'install pulumi dependencies'
 
+        # runs `pulumi preview` if PR or manual build invoked
       - task: Pulumi@1
         condition: or(eq(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.Reason'], 'Manual'))
         inputs:
@@ -89,6 +97,7 @@ stages:
           cwd: 'infra/'
           stack: 'binhrobles/vue-nuxt-infra/$(environment)'
 
+        # runs `pulumi up --yes` if part of automated process
       - task: Pulumi@1
         condition: or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'BatchedCI'))
         inputs:
@@ -103,12 +112,13 @@ stages:
         workingDirectory: 'infra/'
         name: 'pulumi'
 
+      # copies static files to s3 bucket after successful building and infra generation
     - job: PublishApp
       dependsOn:
         - Artifact
         - Infrastructure
 
-      # map in the variable
+      # map in the output from previous job
       # remember, expressions require single quotes
       variables:
         bucketName: $[ dependencies.Infrastructure.outputs['pulumi.bucketName'] ]
@@ -118,7 +128,7 @@ stages:
         artifact: $(artifactName)
 
       - task: AmazonWebServices.aws-vsts-tools.S3Upload.S3Upload@1
-        displayName: 'S3 Upload: binhrobles-azurepipelines-test'
+        displayName: 'S3 Upload: $(artifactName) to $(bucketName)'
         inputs:
           regionName: 'us-west-2'
           bucketName: $(bucketName)

@@ -1,0 +1,3 @@
+name: skeleton-infra
+runtime: nodejs
+description: Starter static site infrastructure

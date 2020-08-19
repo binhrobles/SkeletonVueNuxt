@@ -20,6 +20,7 @@
     }
   },
   "dependencies": {
+    "jest-junit": "^11.1.0",
     "nuxt": "^2.14.0"
   },
   "devDependencies": {

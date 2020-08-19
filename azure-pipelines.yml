@@ -146,3 +146,97 @@ stages:
       steps:
       - script: echo "TODO"
         displayName: 'Some great integration tests'
+
+- stage: PublishQA
+  variables:
+    artifactName: 'QA-$(Build.SourceVersion)' # append the git hash to the artifact name
+    environment: qa
+  jobs:
+    - job: Artifact
+      steps:
+      - task: Cache@2
+        inputs:
+          key: 'client | yarn | "$(Agent.OS)" | yarn.lock'
+          path: $(YARN_CACHE_FOLDER)
+        displayName: Cache Yarn packages
+
+      - script: yarn install
+        displayName: 'Install dependencies'
+
+      - script: |
+          env | grep NODE_ENV
+          yarn build
+        displayName: 'Generate static resources'
+        env:
+          NODE_ENV: $(environment)
+
+      - publish: dist
+        artifact: $(artifactName)
+
+    - job: Infrastructure
+      steps:
+      - task: Cache@2
+        inputs:
+          key: 'pulumi | yarn | "$(Agent.OS)" | yarn.lock'
+          path: $(YARN_CACHE_FOLDER)
+        displayName: Cache Yarn packages
+
+      - script: yarn
+        workingDirectory: 'infra/'
+        displayName: 'install pulumi dependencies'
+
+        # runs `pulumi preview` if PR or manual build invoked
+      - task: Pulumi@1
+        condition: or(eq(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.Reason'], 'Manual'))
+        inputs:
+          command: 'preview'
+          cwd: 'infra/'
+          stack: 'binhrobles/vue-nuxt-infra/$(environment)'
+
+        # runs `pulumi up --yes` if part of automated process
+      - task: Pulumi@1
+        condition: or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'BatchedCI'))
+        inputs:
+          command: 'up'
+          cwd: 'infra/'
+          stack: 'binhrobles/vue-nuxt-infra/$(environment)'
+          args: '--yes'
+
+      - script: |
+          echo "##vso[task.setvariable variable=bucketName;isOutput=true]$(pulumi stack output bucketName)"
+        displayName: 'Set stack outputs as variables'
+        workingDirectory: 'infra/'
+        name: 'pulumi'
+
+      # copies static files to s3 bucket after successful building and infra generation
+    - job: Deploy
+      dependsOn:
+        - Artifact
+        - Infrastructure
+
+      # map in the output from previous job
+      # remember, expressions require single quotes
+      variables:
+        bucketName: $[ dependencies.Infrastructure.outputs['pulumi.bucketName'] ]
+
+      steps:
+      - download: current # specifies that artifact was published during this run
+        artifact: $(artifactName)
+
+      - task: AmazonWebServices.aws-vsts-tools.S3Upload.S3Upload@1
+        displayName: 'S3 Upload: $(artifactName) to $(bucketName)'
+        inputs:
+          regionName: 'us-west-2'
+          bucketName: $(bucketName)
+          sourceFolder: '$(Pipeline.Workspace)/$(artifactName)'
+        env:  # explicitly map in secret env vars
+          AWS_ACCESS_KEY_ID: $(AWS_ACCESS_KEY_ID)
+          AWS_SECRET_ACCESS_KEY: $(AWS_SECRET_ACCESS_KEY)
+
+      # can run any integration or smoke testing here
+    - job: PostDeploy
+      dependsOn:
+        - Deploy
+      steps:
+      - script: echo "TODO"
+        displayName: 'Some great integration tests'

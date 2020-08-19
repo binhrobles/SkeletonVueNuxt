@@ -31,7 +31,7 @@ stages:
         displayName: 'Install dependencies'
 
       - script: yarn test:unit
-        displayName: 'Client UI Tests'
+        displayName: 'Client Unit Tests'
 
       - task: PublishTestResults@2
         condition: succeededOrFailed()

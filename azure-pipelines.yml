@@ -81,14 +81,14 @@ stages:
         inputs:
           command: 'preview'
           cwd: 'infra/'
-          stack: 'binhrobles/vue-nuxt-client/$(environment)'
+          stack: 'binhrobles/vue-nuxt-infra/$(environment)'
 
       - task: Pulumi@1
         condition: or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'BatchedCI'))
         inputs:
           command: 'up'
           cwd: 'infra/'
-          stack: 'binhrobles/vue-nuxt-client/$(environment)'
+          stack: 'binhrobles/vue-nuxt-infra/$(environment)'
           args: '--yes'
 
       - script: |

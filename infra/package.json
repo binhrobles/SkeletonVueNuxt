@@ -1,5 +1,5 @@
 {
-    "name": "skeleton-infra",
+    "name": "vue-nuxt-infra",
     "devDependencies": {
         "@types/node": "^10.0.0"
     },

@@ -95,9 +95,12 @@ stages:
       - script: echo "TODO"
         displayName: 'Some great regression tests'
 
-  # only runs when run was triggered by git push
+  # only runs when
+  # previous jobs succeeded
+  # and
+  # run was triggered by git push
 - stage: PublishQA
-  condition: or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'BatchedCI'))
+  condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'BatchedCI')))
   jobs:
     - template: pipeline-templates/build-and-deploy.template.yml
       parameters:

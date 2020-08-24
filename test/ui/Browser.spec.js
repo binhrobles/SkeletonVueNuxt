@@ -1,7 +1,13 @@
-import { toMatchImageSnapshot } from 'jest-image-snapshot'
+import { configureToMatchImageSnapshot } from 'jest-image-snapshot'
 import puppeteer from 'puppeteer'
 
-expect.extend({ toMatchImageSnapshot })
+// set a 1% minimum difference threshold
+const imageComparisonConfig = configureToMatchImageSnapshot({
+  customDiffConfig: {
+    threshold: 1,
+  },
+})
+expect.extend({ imageComparisonConfig })
 
 describe('jest-image-snapshot usage with an image received from puppeteer', () => {
   let browser

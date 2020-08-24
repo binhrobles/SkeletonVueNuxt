@@ -30,7 +30,7 @@ stages:
       - script: yarn install
         displayName: 'Install dependencies'
 
-      - script: yarn test
+      - script: yarn test:unit
         displayName: 'Client Unit Tests'
 
       - task: PublishTestResults@2
@@ -45,6 +45,35 @@ stages:
           codeCoverageTool: Cobertura
           summaryFileLocation: $(System.DefaultWorkingDirectory)/coverage/cobertura-coverage.xml
 
+    - job: ClientUITests
+      steps:
+      - task: Cache@2
+        inputs:
+          key: 'client | yarn | "$(Agent.OS)" | yarn.lock'
+          path: $(YARN_CACHE_FOLDER)
+        displayName: Cache Yarn packages
+
+      - script: yarn install
+        displayName: 'Install dependencies'
+
+      - script: yarn build
+        displayName: 'Build test environment'
+
+      - script: yarn test:ui
+        displayName: 'Client UI Tests'
+
+      - task: PublishTestResults@2
+        condition: succeededOrFailed()
+        inputs:
+          testRunner: JUnit
+          testResultsFiles: junit.xml
+
+      - task: PublishPipelineArtifact@1
+        condition: failed()
+        inputs:
+          targetPath: 'test/ui/__image_snapshots__/__diff_output__'
+          artifactName: UITestSnapshotDiff
+
     - job: PulumiValidation
       steps:
       - script: echo "TODO"
@@ -54,7 +83,7 @@ stages:
   # Depend on success of previous stage execution
 - stage: PublishDev
   jobs:
-    - template: build-and-deploy.template.yml
+    - template: pipeline-templates/build-and-deploy.template.yml
       parameters:
         environment: development
         artifactName: 'development-$(Build.SourceVersion)' # append the git hash to the artifact name
@@ -66,11 +95,14 @@ stages:
       - script: echo "TODO"
         displayName: 'Some great regression tests'
 
-  # only runs when run was triggered by git push
+  # only runs when
+  # previous jobs succeeded
+  # and
+  # run was triggered by git push
 - stage: PublishQA
-  condition: or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'BatchedCI'))
+  condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'BatchedCI')))
   jobs:
-    - template: build-and-deploy.template.yml
+    - template: pipeline-templates/build-and-deploy.template.yml
       parameters:
         environment: qa
         artifactName: 'qa-$(Build.SourceVersion)' # append the git hash to the artifact name

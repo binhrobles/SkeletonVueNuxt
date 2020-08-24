@@ -9,7 +9,12 @@ describe('jest-image-snapshot usage with an image received from puppeteer', () =
 
   beforeAll(async () => {
     browser = await puppeteer.launch({
-      args: ['--no-sandbox', '--no-zygote', '--single-process'],
+      args: [
+        '--no-sandbox',
+        '--no-zygote',
+        '--single-process',
+        '--font-render-hinting=none',
+      ],
     })
     page = await browser.newPage()
 

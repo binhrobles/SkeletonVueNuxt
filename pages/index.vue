@@ -42,7 +42,7 @@ export default {}
 }
 
 .title {
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: sans-serif;
   display: block;
   font-weight: 300;
   font-size: 100px;

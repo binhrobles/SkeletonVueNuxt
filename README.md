@@ -1,5 +1,7 @@
 # vue-nuxt-client
 
+[![Build Status](https://dev.azure.com/binhrobles/SkeletonVueNuxt/_apis/build/status/binhrobles.SkeletonVueNuxt?branchName=master)](https://dev.azure.com/binhrobles/SkeletonVueNuxt/_build/latest?definitionId=3&branchName=master)
+
 ## Build Setup
 
 ```bash

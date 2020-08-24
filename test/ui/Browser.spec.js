@@ -14,6 +14,7 @@ describe('jest-image-snapshot usage with an image received from puppeteer', () =
         '--no-zygote',
         '--single-process',
         '--font-render-hinting=none',
+        '--enable-font-antialiasing',
       ],
     })
     page = await browser.newPage()

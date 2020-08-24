@@ -10,7 +10,7 @@
     "lint:js": "eslint --ext .js,.vue --ignore-path .gitignore .",
     "lint": "yarn lint:js",
     "test:unit": "MODE=unit jest",
-    "test:ui": "MODE=ui jest"
+    "test:ui": "yarn build; MODE=ui jest"
   },
   "lint-staged": {
     "*.{js,vue}": "eslint"
